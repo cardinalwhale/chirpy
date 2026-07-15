@@ -21,18 +21,18 @@ func main() {
 	apiCfg := apiConfig{}
 	ServeMux := http.NewServeMux()
 	ServeMux.Handle("/app", http.StripPrefix("/app", apiCfg.middlewareMetricsInc(http.FileServer(http.Dir(".")))))
-	ServeMux.Handle("/assets/logo.png", http.FileServer(http.Dir(".")))
-	ServeMux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
+	ServeMux.Handle("/app/assets/", http.StripPrefix("/app", apiCfg.middlewareMetricsInc(http.FileServer(http.Dir(".")))))
+	ServeMux.HandleFunc("GET /api/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(200)
 		w.Write([]byte("OK"))
 	})
-	ServeMux.HandleFunc("GET /metrics", func(w http.ResponseWriter, r *http.Request) {
+	ServeMux.HandleFunc("GET /api/metrics", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(200)
 		fmt.Fprintf(w, "Hits: %d", apiCfg.fileServerHits.Load())
 	})
-	ServeMux.HandleFunc("POST /reset", func(w http.ResponseWriter, r *http.Request) {
+	ServeMux.HandleFunc("POST /api/reset", func(w http.ResponseWriter, r *http.Request) {
 		apiCfg.fileServerHits.Swap(0)
 	})
 	MyServer := http.Server{}
