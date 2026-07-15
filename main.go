@@ -27,12 +27,12 @@ func main() {
 		w.WriteHeader(200)
 		w.Write([]byte("OK"))
 	})
-	ServeMux.HandleFunc("GET /api/metrics", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	ServeMux.HandleFunc("GET /admin/metrics", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(200)
-		fmt.Fprintf(w, "Hits: %d", apiCfg.fileServerHits.Load())
+		w.Write([]byte(fmt.Sprintf("<html> <body> <h1>Welcome, Chirpy Admin</h1> <p>Chirpy has been visited %d times!</p> </body> </html>", apiCfg.fileServerHits.Load())))
 	})
-	ServeMux.HandleFunc("POST /api/reset", func(w http.ResponseWriter, r *http.Request) {
+	ServeMux.HandleFunc("POST /admin/reset", func(w http.ResponseWriter, r *http.Request) {
 		apiCfg.fileServerHits.Swap(0)
 	})
 	MyServer := http.Server{}
