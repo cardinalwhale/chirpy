@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync/atomic"
@@ -34,6 +35,46 @@ func main() {
 	})
 	ServeMux.HandleFunc("POST /admin/reset", func(w http.ResponseWriter, r *http.Request) {
 		apiCfg.fileServerHits.Swap(0)
+	})
+	ServeMux.HandleFunc("POST /api/validate_chirp", func(w http.ResponseWriter, r *http.Request) {
+		type parameter struct {
+			Body string `json:"body"`
+		}
+
+		decoder := json.NewDecoder(r.Body)
+		param := parameter{}
+		err := decoder.Decode(&param)
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+		if len(param.Body) <= 140 {
+			type validReturnParam struct {
+				ValidReturn bool `json:"valid"`
+			}
+			validReturn := validReturnParam{ValidReturn: true}
+			dat, err := json.Marshal(validReturn)
+			if err != nil {
+				w.WriteHeader(500)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			w.Write(dat)
+		} else {
+			type errorReturnParam struct {
+				ErrorReturn string `json:"error"`
+			}
+			errorReturn := errorReturnParam{ErrorReturn: "Chirp is too long"}
+			dat, err := json.Marshal(errorReturn)
+			if err != nil {
+				w.WriteHeader(500)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(400)
+			w.Write(dat)
+		}
 	})
 	MyServer := http.Server{}
 	MyServer.Handler = ServeMux
