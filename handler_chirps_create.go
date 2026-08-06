@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cardinalwhale/chirpy/internal/auth"
 	"github.com/cardinalwhale/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -49,7 +50,17 @@ func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request
 	}
 	cleaned := getCleanedBody(params.Body, badWords)
 
-	chirpParams := database.CreateChirpParams{Body: cleaned, UserID: params.UserID}
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Unanthorized", err)
+	}
+
+	jwtID, err := auth.ValidateJWT(token, cfg.secret)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Unanthorized", err)
+	}
+
+	chirpParams := database.CreateChirpParams{Body: cleaned, UserID: jwtID}
 	chirp, err := cfg.db.CreateChirp(r.Context(), chirpParams)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create chirp", err)
@@ -62,7 +73,7 @@ func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request
 			CreatedAt: chirp.CreatedAt,
 			UpdatedAt: chirp.UpdatedAt,
 			Body:      chirp.Body,
-			UserID:    chirp.UserID,
+			UserID:    jwtID,
 		},
 	})
 }

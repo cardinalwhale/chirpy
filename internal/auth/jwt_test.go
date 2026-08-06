@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
@@ -53,5 +54,18 @@ func TestWrongSecret(t *testing.T) {
 		t.Error("it shouldn't validate the token")
 		t.Log(err)
 		t.Log(uuid)
+	}
+}
+
+func TestGetBearerToken(t *testing.T) {
+	header := make(http.Header)
+	token, err := GetBearerToken(header)
+	if err.Error() != "Header doesn't exist" {
+		t.Error("no error handling for the non existing headers")
+	}
+	header.Set("Authorization", "Bearer TOKEN_STRING")
+	token, _ = GetBearerToken(header)
+	if token != "TOKEN_STRING" {
+		t.Error("get bearer token is not working correctly")
 	}
 }
