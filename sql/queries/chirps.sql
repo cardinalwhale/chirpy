@@ -4,3 +4,7 @@ VALUES (
     gen_random_uuid(), NOW(), NOW(), $1, $2
 )
 RETURNING *;
+
+-- name: DeleteChirp :exec
+DELETE FROM chirps
+WHERE id = $1;
